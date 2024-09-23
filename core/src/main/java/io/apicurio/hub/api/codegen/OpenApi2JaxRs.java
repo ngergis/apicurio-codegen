@@ -16,6 +16,10 @@
 
 package io.apicurio.hub.api.codegen;
 
+import com.sun.codemodel.JClass;
+import com.sun.codemodel.JPackage;
+import com.sun.codemodel.JTypeVar;
+import io.apicurio.hub.api.codegen.beans.CodegenBeanPropertyAnnotation;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,6 +39,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -67,6 +72,7 @@ import org.jboss.forge.roaster.model.util.Types;
 import org.jsonschema2pojo.Annotator;
 import org.jsonschema2pojo.DefaultGenerationConfig;
 import org.jsonschema2pojo.GenerationConfig;
+import org.jsonschema2pojo.InclusionLevel;
 import org.jsonschema2pojo.Jackson2Annotator;
 import org.jsonschema2pojo.Schema;
 import org.jsonschema2pojo.SchemaGenerator;
@@ -115,32 +121,41 @@ public class OpenApi2JaxRs {
     protected static Charset utf8 = StandardCharsets.UTF_8;
     protected static final Type<?> VOID = parseType("java.lang.Void");
 
-    protected static GenerationConfig config = new DefaultGenerationConfig() {
-        @Override
-        public boolean isUsePrimitives() {
-            return false;
-        }
+    protected static GenerationConfig config;
 
-        @Override
-        public boolean isIncludeHashcodeAndEquals() {
-            return false;
-        }
+    protected static void initConfig(InclusionLevel inclusion_level) {
+        config = new DefaultGenerationConfig() {
+            @Override
+            public boolean isUsePrimitives() {
+                return false;
+            }
 
-        @Override
-        public boolean isIncludeAdditionalProperties() {
-            return true;
-        }
+            @Override
+            public boolean isIncludeHashcodeAndEquals() {
+                return false;
+            }
 
-        @Override
-        public boolean isIncludeToString() {
-            return false;
-        }
+            @Override
+            public boolean isIncludeAdditionalProperties() {
+                return true;
+            }
 
-        @Override
-        public boolean isFormatDateTimes() {
-            return false;
-        }
-    };
+            @Override
+            public boolean isIncludeToString() {
+                return false;
+            }
+
+            @Override
+            public boolean isFormatDateTimes() {
+                return false;
+            }
+
+            @Override
+            public InclusionLevel getInclusionLevel() {
+                return inclusion_level;
+            }
+        };
+    }
     protected static JavaBeanPostProcessor postProcessor = new JavaBeanPostProcessor();
 
     protected String openApiDoc;
@@ -156,6 +171,8 @@ public class OpenApi2JaxRs {
         this.settings.artifactId = "generated-api";
         this.settings.groupId = "org.example.api";
         this.settings.javaPackage = "org.example.api";
+
+        initConfig(settings.getInclusionLevel());
     }
 
     /**
@@ -165,6 +182,7 @@ public class OpenApi2JaxRs {
      */
     public void setSettings(JaxRsProjectSettings settings) {
         this.settings = settings;
+        initConfig(settings.getInclusionLevel());
     }
 
     /**
@@ -295,11 +313,13 @@ public class OpenApi2JaxRs {
             List<CodegenBeanAnnotationDirective> annotations = new ArrayList<>();
             annotations.addAll(info.getBeanAnnotations());
             CodegenJavaBean bean = codeWriter.getBean(className);
+            List<CodegenBeanPropertyAnnotation> propertyAnnotations = null;
             if (bean != null && bean.getAnnotations() != null) {
+                propertyAnnotations = info.getPropertyAnnotations().get(bean.getName());
                 annotations.addAll(bean.getAnnotations());
             }
 
-            ByteArrayOutputStream processedBeanData = postProcessor.process(className, annotations, beanData);
+            ByteArrayOutputStream processedBeanData = postProcessor.process(className, annotations, beanData, propertyAnnotations);
             if (beanData != processedBeanData) {
                 codeWriter.set(className, processedBeanData);
             }
@@ -1017,6 +1037,31 @@ public class OpenApi2JaxRs {
             if (!codegenInfo.getSuppressDateTimeFormats()) {
                 super.dateTimeField(field, clazz, node);
             }
+        }
+
+        @Override
+        public void propertyField(JFieldVar field, JDefinedClass clazz, String propertyName,
+            JsonNode propertyNode) {
+            super.propertyField(field, clazz, propertyName, propertyNode);
+
+            List<String> fieldAnnotations = extractFieldAnnotations(propertyNode);
+            if (!fieldAnnotations.isEmpty()) {
+                this.codegenInfo.addPropertyAnnotations(clazz.name(), propertyName, fieldAnnotations);
+            }
+        }
+
+        private List<String> extractFieldAnnotations(JsonNode propertyNode) {
+            JsonNode fieldAnnotation = propertyNode.get(CodegenExtensions.ANNOTATIONS);
+            if (fieldAnnotation != null) {
+                try {
+                    return new ObjectMapper().readerForListOf(String.class)
+                        .readValue(fieldAnnotation);
+                } catch (Exception e) {
+                    return Collections.emptyList();
+                }
+            }
+
+            return Collections.emptyList();
         }
     }
 }

@@ -17,6 +17,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class FooBean {
 
     @JsonProperty("name")
+    @io.quarkus.resteasy.reactive.jackson.SecureField(rolesAllowed = "role1")
+    @org.example.CustomAnnotation(value = "test")
     private String name;
     @JsonProperty("comment")
     private String comment;

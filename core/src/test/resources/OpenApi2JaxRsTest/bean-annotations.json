@@ -21,7 +21,8 @@
             	"type": "object",
             	"properties": {
                     "name": {
-                        "type": "string"
+                        "type": "string",
+                        "x-codegen-annotations": ["io.quarkus.resteasy.reactive.jackson.SecureField(rolesAllowed = \"role1\")", "org.example.CustomAnnotation(value = \"test\")"]
                     },
                     "comment": {
                         "type": "string"
@@ -32,10 +33,12 @@
             	"type": "object",
             	"properties": {
                     "name": {
-                        "type": "string"
+                        "type": "string",
+                        "x-codegen-annotations": ["io.quarkus.resteasy.reactive.jackson.SecureField(rolesAllowed = \"role1\")"]
                     },
                     "description": {
-                        "type": "string"
+                        "type": "string",
+                        "x-codegen-annotations": ["io.quarkus.resteasy.reactive.jackson.SecureField(rolesAllowed = \"role1\")"]
                     }
             	},
             	"x-codegen-annotations": ["io.quarkus.runtime.annotations.RegisterForReflection"]

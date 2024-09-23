@@ -16,12 +16,14 @@
 
 package io.apicurio.hub.api.codegen.post;
 
+import io.apicurio.hub.api.codegen.beans.CodegenBeanPropertyAnnotation;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import io.apicurio.hub.api.codegen.beans.CodegenBeanAnnotationDirective;
+import java.util.Map;
 
 /**
  * @author eric.wittmann@gmail.com
@@ -34,9 +36,14 @@ public class JavaBeanPostProcessor {
      * @param className
      * @param annotations
      * @param beanData
+     * @param propertyAnnotations
      * @throws IOException
      */
-    public ByteArrayOutputStream process(String className, List<CodegenBeanAnnotationDirective> annotations, ByteArrayOutputStream beanData) throws IOException {
+    public ByteArrayOutputStream process(
+        String className,
+        List<CodegenBeanAnnotationDirective> annotations,
+        ByteArrayOutputStream beanData,
+        List<CodegenBeanPropertyAnnotation> propertyAnnotations) throws IOException {
         boolean modified = false;
         String content = beanData.toString(StandardCharsets.UTF_8.name());
         if (content.contains("import java.lang.String;")) {
@@ -50,6 +57,21 @@ public class JavaBeanPostProcessor {
         if (content.contains("APICURIO_CODEGEN_BYTE_ARRAY_REPRESENTATION")) {
             content = content.replaceAll("APICURIO_CODEGEN_BYTE_ARRAY_REPRESENTATION", "byte[]");
             modified = true;
+        }
+
+        if (propertyAnnotations != null) {
+            for (CodegenBeanPropertyAnnotation propertyAnnotation : propertyAnnotations) {
+                StringBuilder builder = new StringBuilder();
+                for (String annotation : propertyAnnotation.getAnnotations()) {
+                    builder.append("\n    ");
+                    builder.append("@");
+                    builder.append(annotation);
+                }
+                content = content.replaceFirst("JsonProperty\\(\"" + propertyAnnotation.getPropertyName() + "\"\\)",
+                    "JsonProperty\\(\"" + propertyAnnotation.getPropertyName() + "\"\\)"
+                        + builder);
+                modified = true;
+            }
         }
 
         boolean isEnum = content.contains("public enum");

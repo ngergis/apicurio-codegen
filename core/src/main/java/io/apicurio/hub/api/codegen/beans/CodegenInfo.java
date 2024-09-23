@@ -17,7 +17,9 @@
 package io.apicurio.hub.api.codegen.beans;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author eric.wittmann@gmail.com
@@ -32,6 +34,8 @@ public class CodegenInfo {
     private String contextRoot = "";
     private List<CodegenBeanAnnotationDirective> beanAnnotations = new ArrayList<>();
     private Boolean suppressDateTimeFormats = Boolean.FALSE;
+
+    private Map<String, List<CodegenBeanPropertyAnnotation>> propertyAnnotations = new HashMap<>();
 
     /**
      * Constructor.
@@ -143,5 +147,20 @@ public class CodegenInfo {
 
     public void setSuppressDateTimeFormats(Boolean suppressDateTimeFormats) {
         this.suppressDateTimeFormats = suppressDateTimeFormats;
+    }
+
+    public Map<String, List<CodegenBeanPropertyAnnotation>> getPropertyAnnotations() {
+        return propertyAnnotations;
+    }
+
+    public void addPropertyAnnotations(String beanName, String propertyName, List<String> annotations) {
+        CodegenBeanPropertyAnnotation annotationsForProperty = new CodegenBeanPropertyAnnotation();
+        annotationsForProperty.setPropertyName(propertyName);
+        annotationsForProperty.setAnnotations(annotations);
+
+        List<CodegenBeanPropertyAnnotation> annotationsList = propertyAnnotations.getOrDefault(beanName, new ArrayList<>());
+        annotationsList.add(annotationsForProperty);
+
+        propertyAnnotations.put(beanName, annotationsList);
     }
 }

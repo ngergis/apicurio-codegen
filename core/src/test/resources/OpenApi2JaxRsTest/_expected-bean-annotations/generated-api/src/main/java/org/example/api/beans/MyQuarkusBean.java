@@ -18,8 +18,10 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class MyQuarkusBean {
 
     @JsonProperty("name")
+    @io.quarkus.resteasy.reactive.jackson.SecureField(rolesAllowed = "role1")
     private String name;
     @JsonProperty("description")
+    @io.quarkus.resteasy.reactive.jackson.SecureField(rolesAllowed = "role1")
     private String description;
 
     @JsonProperty("name")

@@ -16,6 +16,8 @@
 
 package io.apicurio.hub.api.codegen;
 
+import org.jsonschema2pojo.InclusionLevel;
+
 /**
  * Represents some basic meta information about the project being generated.
  *
@@ -33,6 +35,8 @@ public class JaxRsProjectSettings {
     public String javaPackage = "org.example.api";
     public String classNamePrefix = "";
     public String classNameSuffix = "";
+
+    public InclusionLevel inclusionLevel = InclusionLevel.NON_NULL;
 
     /**
      * Constructor.
@@ -166,5 +170,13 @@ public class JaxRsProjectSettings {
 
     public void setClassNameSuffix(String classNameSuffix) {
         this.classNameSuffix = classNameSuffix;
+    }
+
+    public InclusionLevel getInclusionLevel() {
+        return inclusionLevel;
+    }
+
+    public void setInclusionLevel(InclusionLevel inclusionLevel) {
+        this.inclusionLevel = inclusionLevel;
     }
 }
