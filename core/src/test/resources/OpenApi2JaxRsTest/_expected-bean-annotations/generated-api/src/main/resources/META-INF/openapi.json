@@ -26,6 +26,10 @@
                     },
                     "comment": {
                         "type": "string"
+                    },
+                    "quarkus_bean": {
+                        "$ref": "#/components/schemas/MyQuarkusBean",
+                        "x-codegen-annotations": ["io.quarkus.resteasy.reactive.jackson.SecureField(rolesAllowed = \"role1\")"]
                     }
             	}
         	},
